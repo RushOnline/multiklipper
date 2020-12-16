@@ -23,6 +23,8 @@ cmd_add() {
 		exit 1
 	fi
 
+	echo "create configs"
+
 	sed \
 		-e "s|/etc/default/klipper|/etc/default/klipper$1|g" \
 		-e "s|/var/run/klipper.pid|/var/run/klipper$1.pid|g" \
@@ -63,20 +65,47 @@ cmd_add() {
 		-e "s|#MPORT#|$MPORT|g" \
 		fluidd.template > /etc/nginx/sites-enabled/fluidd$1
 
+	echo "reload supervisor"
 	systemctl daemon-reload
+
+	echo "start klipper $1"
 	systemctl start klipper$1
+
+	echo "start moonraker $1"
 	systemctl start moonraker$1
+
+	echo "restart web server"
 	systemctl restart nginx
 
+	echo "enable klipper and moonraker autostart for printer $1"
+	systemctl enable klipper$1
+	systemctl enable moonraker$1
 
+	IP=$(ip -o r g 8.8.8.8 | awk '{ print $7 }')
+	cat <<EOF
+	**************
+	Done!
+
+	Now you must open http://$IP:$FPORT/, press top-right three dots,
+	press "Add another printer", and enter $IP:$FPORT 
+	**************
+EOF
 }
 
 cmd_rm() {
 	echo "removing printer $1"
 
+	echo "disable klipper and moonraker autostart for printer $1"
+	systemctl disable moonraker$1
+	systemctl disable klipper$1
+
+	echo "stop moonraker $1"
 	systemctl stop moonraker$1
+
+	echo "stop klipper $1"
 	systemctl stop klipper$1
 
+	echo "remove generated files"
 	rm /etc/default/moonraker$1
 	rm /etc/default/klipper$1
 	rm /etc/init.d/klipper$1
@@ -85,6 +114,7 @@ cmd_rm() {
 	rm /etc/nginx/sites-enabled/fluidd$1
 	rm -rf /home/pi/fluidd$1
 
+	echo "reload supervisor config"
 	systemctl daemon-reload
 
 }
