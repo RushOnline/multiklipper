@@ -8,7 +8,7 @@
 
 ```bash
 cd ~
-git clone git@github.com:RushOnline/multiklipper.git
+git clone https://github.com/RushOnline/multiklipper.git
 ```
 
 # Подготовка к запуску
