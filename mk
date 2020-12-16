@@ -48,13 +48,9 @@ instance_add() {
 		/etc/default/moonraker > /etc/default/moonraker$1
 
 	sed \
-		-e "s|7125|$MPORT|g" \
+                -e "s|7125|$MPORT\nklippy_uds_address: /tmp/klippy$1_uds|g" \
 		/home/pi/moonraker.conf > /home/pi/moonraker$1.conf
 	chown pi:pi /home/pi/moonraker$1.conf
-
-	systemctl daemon-reload
-	systemctl start klipper$1
-	systemctl start moonraker$1
 
 	cp -R /home/pi/fluidd /home/pi/fluidd$1
 	sed \
@@ -67,7 +63,10 @@ instance_add() {
 		-e "s|#MPORT#|$MPORT|g" \
 		fluidd.template > /etc/nginx/sites-enabled/fluidd$1
 
-	systemctl reload nginx
+	systemctl daemon-reload
+	systemctl start klipper$1
+	systemctl start moonraker$1
+	systemctl restart nginx
 
 
 }
@@ -78,10 +77,13 @@ instance_rm() {
 	systemctl stop moonraker$1
 	systemctl stop klipper$1
 
-	echo rm /etc/default/moonraker$1
-	echo rm /etc/default/klipper$1
-	echo rm /etc/init.d/klipper$1
-	echo rm /etc/init.d/moonraker$1
+	rm /etc/default/moonraker$1
+	rm /etc/default/klipper$1
+	rm /etc/init.d/klipper$1
+	rm /etc/init.d/moonraker$1
+	rm /home/pi/moonraker$1.conf
+	rm /etc/nginx/sites-enabled/fluidd$1
+	rm -rf /home/pi/fluidd$1
 
 	systemctl daemon-reload
 
