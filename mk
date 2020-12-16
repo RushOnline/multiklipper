@@ -1,6 +1,6 @@
 #!/bin/bash
 
-instance_add() {
+cmd_add() {
 	echo "adding printer $1"
 	CONFIG="/home/pi/klipper_config/printer$1.cfg"
 	ID=$1
@@ -71,7 +71,7 @@ instance_add() {
 
 }
 
-instance_rm() {
+cmd_rm() {
 	echo "removing printer $1"
 
 	systemctl stop moonraker$1
@@ -95,11 +95,8 @@ if [ -z "$2" ]; then
 fi
 
 case $1 in
-add)
-	instance_add $2
-	;;
-rm)
-	instance_rm $2
+add|rm)
+	cmd_$1 $2
 	;;
 *)
 	echo "usage: $0 <add|rm> <number>"
